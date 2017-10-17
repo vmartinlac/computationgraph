@@ -5,7 +5,7 @@ ComputationGraph::ComputationGraph() :
     _numOutputs(0)
 { }
 
-int ComputationGraph::registerNode(std::shared_ptr<ComputationGraph::Node> node)
+int ComputationGraph::registerNode(ComputationGraph::Node* node)
 {
     assert(_frozen == false);
 
@@ -22,5 +22,13 @@ void ComputationGraph::freeze()
         _frozen = true;
         // todo : check that all inputs are connected.
         // and that adjacet nodes belong to the same graph.
+    }
+}
+
+ComputationGraph::~ComputationGraph()
+{
+    for(RegisteredNode& n : _nodes)
+    {
+        delete n.node;
     }
 }

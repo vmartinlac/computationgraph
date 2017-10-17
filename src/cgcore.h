@@ -2,7 +2,6 @@
 
 #include <vector>
 #include <cassert>
-#include <memory>
 
 /* Computation graph */
 
@@ -14,8 +13,9 @@ public:
     class Evaluation;
 
     ComputationGraph();
+    ~ComputationGraph();
 
-    int registerNode(std::shared_ptr<Node> node);
+    int registerNode(Node* node);
 
     void freeze();
 
@@ -23,9 +23,9 @@ private:
 
     struct RegisteredNode
     {
-        RegisteredNode(std::shared_ptr<Node> n) : node(n) { }
+        RegisteredNode(Node* n) : node(n) { }
 
-        std::shared_ptr<Node> node;
+        Node* node;
     };
 
     std::vector<RegisteredNode> _nodes;
@@ -91,7 +91,7 @@ protected:
         _numOutputs(num_outputs),
         _graph(graph),
         _inputs(num_inputs),
-        _outputsOffset( graph->registerNode(std::shared_ptr<Node>(this)) )
+        _outputsOffset( graph->registerNode(this) )
     { }
 
     virtual void update() = 0;
