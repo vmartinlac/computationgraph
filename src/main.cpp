@@ -4,6 +4,9 @@
 
 int main(int num_args, char** args)
 {
+    ComputationGraph* graph = new ComputationGraph;
+    ConstantNode* a = new ConstantNode(graph, 1);
+    delete graph;
     /*
     Constant* a = new Constant(1);
     ComputationNode* b = new Fraction;

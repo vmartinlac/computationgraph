@@ -1,25 +1,20 @@
-/*
 #pragma once
 
-#include <cgcore.h>
+#include "cgcore.h"
 
 
-class Constant : public ComputationNode
+class ConstantNode : public ComputationGraph::Node
 {
 public:
 
-    Constant(int dim) : ComputationNode(0, dim) { }
-
-    void setValue(int id, double val)
-    {
-        setOutput(id, val);
-    }
+    ConstantNode(ComputationGraph* graph, int dim) : ComputationGraph::Node(graph, 0, dim) { }
 
 protected:
 
     virtual void update() { }
 };
 
+/*
 
 class Fraction : public ComputationNode
 {

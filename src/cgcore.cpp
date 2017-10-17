@@ -1,18 +1,18 @@
 #include "cgcore.h"
 
-ComputationGraph::ComputationGraph()
+ComputationGraph::ComputationGraph() :
     _frozen(false),
     _numOutputs(0)
 { }
 
-void ComputationGraph::registerNode(std::shared_ptr<ComputationGraph::Node> node)
+int ComputationGraph::registerNode(std::shared_ptr<ComputationGraph::Node> node)
 {
     assert(_frozen == false);
 
-    _nodes.emplace(node);
-    node->setGraph(this);
-    node->setOutputsOffset(_numOutputs);
+    _nodes.push_back( RegisteredNode(node) );
+    const int ret = _numOutputs;
     _numOutputs += node->getNumOutputs();
+    return ret;
 }
 
 void ComputationGraph::freeze()

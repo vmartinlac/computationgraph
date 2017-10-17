@@ -15,7 +15,7 @@ public:
 
     ComputationGraph();
 
-    void registerNode(std::shared_ptr<ComputationNode> node);
+    int registerNode(std::shared_ptr<Node> node);
 
     void freeze();
 
@@ -23,15 +23,17 @@ private:
 
     struct RegisteredNode
     {
-        RegisteredNode(std::shared_ptr<ComputationNode> n) : node(n) { }
+        RegisteredNode(std::shared_ptr<Node> n) : node(n) { }
 
-        std::shared_ptr<ComputationNode> node;
+        std::shared_ptr<Node> node;
     };
 
     std::vector<RegisteredNode> _nodes;
     int _numOutputs;
     bool _frozen;
 };
+
+/* Evaluation */
 
 class ComputationGraph::Evaluation
 {
@@ -45,7 +47,7 @@ protected:
     ComputationGraph* _graph;
 };
 
-/* Abstract node */
+/* Node */
 
 class ComputationGraph::Node
 {
@@ -55,41 +57,19 @@ public:
 
     int getNumInputs() { return _numInputs; }
 
-    // to be called only in ComputationGraph::registerNode().
-    void setOutputsOffset(int offset)
-    {
-        _outputsOffset = offset;
-    }
-
-    // to be called only in ComputationGraph::registerNode().
-    void setGraph(ComputationGraph* graph)
-    {
-        assert( _graph == nullptr );
-        assert( graph != nullptr );
-        _graph = graph;
-    }
-
-    int getOutputsOffset()
-    {
-        return _outputsOffset;
-    }
-
     ComputationGraph* getGraph() { return _graph; }
 
-    double getOutput(ComputationGraph::Evaluation* ev, int id)
+    void connect(int input_id, ComputationGraph::Node* source, int output_id)
     {
-        assert( 0 <= id && id < _numOutputs );
-        return ev->getValue(_outputsOffset + id);
-    }
-
-    void connect(int input_id, ComputationNode* source, int output_id)
-    {
+        assert( _graph->_frozen == false );
         assert( 0 <= input_id && input_id < _numInputs );
         assert( 0 <= output_id && output_id < source->getNumOutputs() );
+        assert( source->_graph == _graph );
         _inputs[input_id].source = source;
         _inputs[input_id].output_id = output_id;
     }
 
+    /*
     void update(int pass)
     {
         if(pass != _lastPass)
@@ -102,52 +82,37 @@ public:
             update();
         }
     }
+    */
 
 protected:
 
-    ComputationNode(
-        int num_inputs,
-        int num_outputs)
-    {
-        _graph = nullptr;
-        _numInputs = num_inputs;
-        _numOutputs = num_outputs;
-        _inputs.resize(num_inputs);
-        for(Connection& con : _inputs)
-        {
-            con.source = nullptr;
-            con.output_id = -1;
-        }
-    }
+    Node(ComputationGraph* graph, int num_inputs, int num_outputs) :
+        _numInputs(num_inputs),
+        _numOutputs(num_outputs),
+        _graph(graph),
+        _inputs(num_inputs),
+        _outputsOffset( graph->registerNode(std::shared_ptr<Node>(this)) )
+    { }
 
     virtual void update() = 0;
 
-    double getInput(int id)
-    {
-        assert( 0 <= id && id < _numInputs );
-        assert( _inputs[id].source != nullptr );
-        return _inputs[id].source->getOutput(_inputs[id].output_id);
-    }
+    double getInput(int id);
 
-    void setOutput(int id, double value)
-    {
-        assert( 0 <= id && id < _numOutputs );
-        _outputs[id] = value;
-    }
+    void setOutput(int id, double value);
 
 private:
 
     struct Connection
     {
         Connection() : source(nullptr), output_id(-1) {}
-        ComputationNode* source;
+        ComputationGraph::Node* source;
         int output_id;
     };
 
-    int _numInputs;
-    int _numOutputs;
+    const int _numInputs;
+    const int _numOutputs;
+    const int _outputsOffset;
     std::vector<Connection> _inputs;
-    std::vector<double> _outputs;
-    int _lastPass;
+    ComputationGraph* _graph;
 };
 
