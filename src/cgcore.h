@@ -15,7 +15,7 @@ public:
     ComputationGraph();
     ~ComputationGraph();
 
-    int registerNode(Node* node);
+    void registerNode(Node* node, int& id, int& outputoffset);
 
     void freeze();
 
@@ -90,9 +90,10 @@ protected:
         _numInputs(num_inputs),
         _numOutputs(num_outputs),
         _graph(graph),
-        _inputs(num_inputs),
-        _outputsOffset( graph->registerNode(this) )
-    { }
+        _inputs(num_inputs)
+    {
+        graph->registerNode(this, _id, _outputsOffset);
+    }
 
     virtual void update() = 0;
 
@@ -111,7 +112,8 @@ private:
 
     const int _numInputs;
     const int _numOutputs;
-    const int _outputsOffset;
+    int _outputsOffset;
+    int _id;
     std::vector<Connection> _inputs;
     ComputationGraph* _graph;
 };

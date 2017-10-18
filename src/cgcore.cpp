@@ -5,14 +5,15 @@ ComputationGraph::ComputationGraph() :
     _numOutputs(0)
 { }
 
-int ComputationGraph::registerNode(ComputationGraph::Node* node)
+void ComputationGraph::registerNode(ComputationGraph::Node* node, int& id, int& outputsoffset)
 {
     assert(_frozen == false);
 
+    id = int(_nodes.size());
+    outputsoffset = _numOutputs;
+
     _nodes.push_back( RegisteredNode(node) );
-    const int ret = _numOutputs;
     _numOutputs += node->getNumOutputs();
-    return ret;
 }
 
 void ComputationGraph::freeze()
