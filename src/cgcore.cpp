@@ -2,18 +2,13 @@
 
 ComputationGraph::ComputationGraph() :
     _frozen(false),
-    _numOutputs(0)
+    _nextPass(0)
 { }
 
-void ComputationGraph::registerNode(ComputationGraph::Node* node, int& id, int& outputsoffset)
+void ComputationGraph::registerNode(ComputationGraph::Node* node)
 {
     assert(_frozen == false);
-
-    id = int(_nodes.size());
-    outputsoffset = _numOutputs;
-
     _nodes.push_back( RegisteredNode(node) );
-    _numOutputs += node->getNumOutputs();
 }
 
 void ComputationGraph::freeze()
@@ -21,8 +16,11 @@ void ComputationGraph::freeze()
     if(_frozen == false)
     {
         _frozen = true;
-        // todo : check that all inputs are connected.
-        // and that adjacet nodes belong to the same graph.
+        for(RegisteredNode& n : _nodes)
+        {
+            assert(n.node->isReady());
+            assert(n.node->getGraph() == this);
+        }
     }
 }
 
@@ -32,4 +30,23 @@ ComputationGraph::~ComputationGraph()
     {
         delete n.node;
     }
+}
+
+void ComputationGraph::update()
+{
+    for(RegisteredNode& n : _nodes)
+    {
+        n.node->update(_nextPass);
+    }
+    _nextPass++;
+}
+
+void ComputationGraph::computeGradient(Node* n, int output_id)
+{
+   for(RegisteredNode& rn : _nodes)
+   {
+      rn.node->setZeroGradient();
+   }
+   n->computeGradient(output_id, _nextPass);
+   _nextPass++;
 }
