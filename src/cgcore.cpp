@@ -1,52 +1,56 @@
 #include "cgcore.h"
 
+
 ComputationGraph::ComputationGraph() :
-    _frozen(false),
-    _nextPass(0)
+  _frozen(false),
+  _nextPass(0)
 { }
 
-void ComputationGraph::registerNode(ComputationGraph::Node* node)
+ComputationGraph::~ComputationGraph()
 {
-    assert(_frozen == false);
-    _nodes.push_back( RegisteredNode(node) );
+  for(Node* n : _nodes)
+  {
+      delete n;
+  }
 }
 
 void ComputationGraph::freeze()
 {
-    if(_frozen == false)
-    {
-        _frozen = true;
-        for(RegisteredNode& n : _nodes)
-        {
-            assert(n.node->isReady());
-            assert(n.node->getGraph() == this);
-        }
-    }
-}
-
-ComputationGraph::~ComputationGraph()
-{
-    for(RegisteredNode& n : _nodes)
-    {
-        delete n.node;
-    }
+  if(_frozen == false)
+  {
+      _frozen = true;
+      for(Node* n : _nodes)
+      {
+          assert(n->isReady());
+          assert(n->owner() == this);
+      }
+  }
 }
 
 void ComputationGraph::update()
 {
-    for(RegisteredNode& n : _nodes)
-    {
-        n.node->update(_nextPass);
-    }
-    _nextPass++;
+  for(Node* n : _nodes)
+  {
+      n->update(_nextPass);
+  }
+  _nextPass++;
 }
 
-void ComputationGraph::computeGradient(Node* n, int output_id)
+void ComputationGraph::updateGradient(Node* node, int output)
 {
-   for(RegisteredNode& rn : _nodes)
-   {
-      rn.node->setZeroGradient();
-   }
-   n->computeGradient(output_id, _nextPass);
-   _nextPass++;
+  assert(this == node->owner());
+
+  for(Node* n : _nodes)
+  {
+      n->prepareGradientUpdate();
+  }
+
+  node->updateGradient(output, _nextPass);
+
+  for(Node* n : _nodes)
+  {
+      n->updateGradient(_nextPass);
+  }
+
+  _nextPass++;
 }
