@@ -1,7 +1,6 @@
 #pragma once
 
 #include <set>
-#include <algorithm>
 #include <vector>
 #include <cassert>
 
@@ -37,129 +36,47 @@ class ComputationGraph::Node
 {
 public:
 
-    int getNumOutputs() { return _numOutputs; }
+    int getNumOutputs();
 
-    int getNumInputs() { return _numInputs; }
+    int getNumInputs();
 
-    ComputationGraph* owner() { return _graph; }
+    ComputationGraph* owner();
 
-    void connect(int input_id, ComputationGraph::Node* source, int output_id)
-    {
-        assert( _graph->_frozen == false );
-        assert( 0 <= input_id && input_id < _numInputs );
-        assert( 0 <= output_id && output_id < source->getNumOutputs() );
-        assert( source->_graph == _graph );
-        _inputs[input_id].source = source;
-        _inputs[input_id].output_id = output_id;
-        source->_clients.insert(this);
-    }
+    void connect(int input_id, ComputationGraph::Node* source, int output_id);
 
     virtual const char* name() = 0;
 
-    bool isReady()
-    {
-      return std::all_of( _inputs.begin(), _inputs.end(), [] (const Input& c) {
-        return c.isConnected();
-      });
-    }
+    bool isReady();
 
     // to be called by ComputationGraph::update();
-    void update(int pass)
-    {
-        if(pass != _lastPass)
-        {
-            _lastPass = pass;
-            for(Input& conn : _inputs)
-            {
-                conn.source->update(pass);
-            }
-            update();
-        }
-    }
+    void update(int pass);
 
     // to be called by ComputationGraph::updateGradient();
-    void updateGradient(int pass)
-    {
-        if(pass != _lastPass)
-        {
-            _lastPass = pass;
-            for(Node* n : _clients)
-            {
-                n->updateGradient(pass);
-            }
-            updateGradient();
-        }
-    }
+    void updateGradient(int pass);
 
     // to be called by ComputationGraph::updateGradient();
-    void updateGradient(int output, int pass)
-    {
-        assert(0 <= output && output < _numOutputs);
-        assert(_lastPass != pass);
-        _lastPass = pass;
-        for(int i=0; i<_numOutputs; i++)
-        {
-            _outputs[i].gradient = (i == output) ? 1.0 : 0.0;
-        }
-    }
+    void setToDifferentiate(int output);
 
-    double getOutput(int id)
-    {
-        assert(0 <= id && id < _numOutputs);
-        return _outputs[id].value;
-    }
+    double getOutput(int id);
 
-    double getGradient(int id)
-    {
-        assert(0 <= id && id < _numOutputs);
-        return _outputs[id].gradient;
-    }
+    double getGradient(int id);
 
     // to be called by ComputationGraph::updateGradient();
-    void prepareGradientUpdate()
-    {
-        for(Output& o : _outputs)
-        {
-            o.gradient = 0.0;
-        }
-    }
+    void prepareGradientUpdate();
 
 protected:
 
-    Node(ComputationGraph* graph, int num_inputs, int num_outputs) :
-        _graph(graph),
-        _numInputs(num_inputs),
-        _numOutputs(num_outputs),
-        _inputs(num_inputs),
-        _outputs(num_outputs),
-        _lastPass(-1)
-    {
-        graph->_nodes.push_back(this);
-    }
+    Node(ComputationGraph* graph, int num_inputs, int num_outputs);
 
     virtual void update() = 0;
 
     virtual void updateGradient() = 0;
 
-    double getInput(int id)
-    {
-        assert(0 <= id && id < _numInputs);
-        Input& c = _inputs[id];
-        return c.source->getOutput(c.output_id);
-    }
+    double getInput(int id);
 
-    void notifyGradient(int input_id, int output_id, double value)
-    {
-        assert( 0 <= input_id && input_id < _numInputs );
-        Input& in = _inputs[input_id];
-        in.source->_outputs[ in.output_id ].gradient += value*_outputs[output_id].gradient;
-    }
+    void notifyGradient(int input_id, int output_id, double value);
 
-    void setOutput(int id, double value)
-    {
-        assert(0 <= id && id < _numOutputs);
-        _outputs[id].value = value;
-    }
+    void setOutput(int id, double value);
 
 private:
 
@@ -193,3 +110,49 @@ private:
     int _lastPass;
 };
 
+inline int ComputationGraph::Node::getNumOutputs()
+{
+    return _numOutputs;
+}
+
+inline int ComputationGraph::Node::getNumInputs()
+{
+    return _numInputs;
+}
+
+inline ComputationGraph* ComputationGraph::Node::owner()
+{
+    return _graph;
+}
+
+inline double ComputationGraph::Node::getOutput(int id)
+{
+    assert(0 <= id && id < _numOutputs);
+    return _outputs[id].value;
+}
+
+inline double ComputationGraph::Node::getGradient(int id)
+{
+    assert(0 <= id && id < _numOutputs);
+    return _outputs[id].gradient;
+}
+
+inline double ComputationGraph::Node::getInput(int id)
+{
+    assert(0 <= id && id < _numInputs);
+    Input& c = _inputs[id];
+    return c.source->getOutput(c.output_id);
+}
+
+inline void ComputationGraph::Node::notifyGradient(int input_id, int output_id, double value)
+{
+    assert( 0 <= input_id && input_id < _numInputs );
+    Input& in = _inputs[input_id];
+    in.source->_outputs[ in.output_id ].gradient += value*_outputs[output_id].gradient;
+}
+
+inline void ComputationGraph::Node::setOutput(int id, double value)
+{
+    assert(0 <= id && id < _numOutputs);
+    _outputs[id].value = value;
+}

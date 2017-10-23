@@ -2,94 +2,46 @@
 
 #include "cgcore.h"
 
-
 class ConstantNode : public ComputationGraph::Node
 {
 public:
 
-    ConstantNode(ComputationGraph* graph, int dim) : Node(graph, 0, dim) { }
-
-    void setValue(int id, double value)
-    {
-        setOutput(id, value);
-    }
-
-    virtual const char* name() { return "Constant"; }
+    ConstantNode(ComputationGraph* graph, int dim);
+    void setValue(int id, double value);
+    virtual const char* name();
 
 protected:
 
-    virtual void update()
-    {
-        ;
-    }
-
-    virtual void updateGradient()
-    {
-        ;
-    }
+    virtual void update();
+    virtual void updateGradient();
 };
 
-
-class Fraction : public ComputationGraph::Node
+class FractionNode : public ComputationGraph::Node
 {
 public:
 
-    Fraction(ComputationGraph* graph, int dim) : Node(graph, dim, dim) { }
-
-    virtual const char* name() { return "Constant"; }
+    FractionNode(ComputationGraph* graph, int dim);
+    virtual const char* name();
 
 protected:
 
-    virtual void update()
-    {
-        assert( getNumInputs() == getNumOutputs() );
-        for(int i=0; i<getNumInputs(); i++)
-        {
-            setOutput(i, 1.0/getInput(i));
-        }
-    }
-
-    virtual void updateGradient()
-    {
-        assert( getNumInputs() == getNumOutputs() );
-        for(int i=0; i<getNumInputs(); i++)
-        {
-            const double in = getInput(i);
-            notifyGradient(i, i, -1.0/(in*in));
-        }
-    }
+    virtual void update();
+    virtual void updateGradient();
 };
 
-
-class Multiply : public ComputationGraph::Node
+class MultiplyNode : public ComputationGraph::Node
 {
 public:
 
-    Multiply(ComputationGraph* graph, int dim) : Node(graph, 2*dim, dim) { }
-
-    virtual const char* name() { return "Constant"; }
+    MultiplyNode(ComputationGraph* graph, int dim);
+    virtual const char* name();
 
 protected:
 
-    virtual void update()
-    {
-        for(int i=0; i<getNumOutputs(); i++)
-        {
-            setOutput(i, getInput(i) * getInput(getNumOutputs()+i));
-        }
-    }
-
-    virtual void updateGradient()
-    {
-        for(int i=0; i<getNumOutputs(); i++)
-        {
-            const double a = getInput(i);
-            const double b = getInput(getNumOutputs()+i);
-            notifyGradient(i, i, b);
-            notifyGradient(getNumOutputs()+i, i, a);
-        }
-    }
+    virtual void update();
+    virtual void updateGradient();
 };
+
 
 
 class Sum : public ComputationGraph::Node
@@ -98,7 +50,7 @@ public:
 
     Sum(ComputationGraph* graph, int dim) : Node(graph, 2*dim, dim) { }
 
-    virtual const char* name() { return "Constant"; }
+    virtual const char* name() { return "Sum"; }
 
 protected:
 
@@ -127,7 +79,7 @@ public:
 
     PositivePart(ComputationGraph* graph, int dim) : Node(graph, dim, dim) { }
 
-    virtual const char* name() { return "Constant"; }
+    virtual const char* name() { return "PositivePart"; }
 
 protected:
 
@@ -153,14 +105,13 @@ protected:
     }
 };
 
-
 class ScalarProduct : public ComputationGraph::Node
 {
 public:
 
     ScalarProduct(ComputationGraph* graph, int dim) : Node(graph, 2*dim, 1) { }
 
-    virtual const char* name() { return "Constant"; }
+    virtual const char* name() { return "ScalarProduct"; }
 
 protected:
 
