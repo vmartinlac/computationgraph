@@ -23,6 +23,10 @@ public:
 
     void updateGradient(Node* node, int output);
 
+    int getNumberOfNodes();
+
+    int getNumberOfOutputs();
+
 private:
 
     std::vector<Node*> _nodes;

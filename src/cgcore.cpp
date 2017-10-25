@@ -27,6 +27,22 @@ void ComputationGraph::freeze()
   }
 }
 
+
+int ComputationGraph::getNumberOfNodes()
+{
+    return _nodes.size();
+}
+
+int ComputationGraph::getNumberOfOutputs()
+{
+    int ret = 0;
+    for(Node* n : _nodes)
+    {
+        ret += n->getNumOutputs();
+    }
+    return ret;
+}
+
 void ComputationGraph::update()
 {
   for(Node* n : _nodes)

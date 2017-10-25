@@ -1,14 +1,23 @@
 
 #include <iostream>
+#include "ann.h"
 #include "cg.h"
 
 void exempleI();
 void exempleII();
+void exempleIII();
 
 int main(int num_args, char** args)
 {
-    exempleI();
+    exempleIII();
     return 0;
+}
+
+void exempleIII()
+{
+    ANN ann;
+    ann.build(2, 3, 2);
+    ann.train();
 }
 
 void exempleI()
@@ -19,10 +28,10 @@ void exempleI()
     ComputationGraph* graph = new ComputationGraph;
 
     ConstantNode* a = new ConstantNode(graph, 2);
-    Sum* c = new Sum(graph, 1);
+    SumNode* c = new SumNode(graph, 1);
     MultiplyNode* d = new MultiplyNode(graph, 1);
     MultiplyNode* e = new MultiplyNode(graph, 1);
-    Sum* f = new Sum(graph, 1);
+    SumNode* f = new SumNode(graph, 1);
 
     a->setValue(0, alpha);
     a->setValue(1, beta);
