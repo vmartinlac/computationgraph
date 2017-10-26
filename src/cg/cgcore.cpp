@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <iostream>
 #include "cgcore.h"
 
 ComputationGraph::ComputationGraph() :
@@ -141,6 +142,6 @@ ComputationGraph::Node::Node(ComputationGraph* graph, int num_inputs, int num_ou
   _outputs(num_outputs),
   _lastPass(-1)
 {
-   graph->_nodes.push_back(this);
+    graph->_nodes.push_back(this);
 }
 

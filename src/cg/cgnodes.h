@@ -97,3 +97,21 @@ protected:
     virtual void updateGradient();
 };
 
+class SelectNode : public ComputationGraph::Node
+{
+public:
+
+    SelectNode(ComputationGraph* graph, int dim);
+    virtual const char* name();
+    void select(int id);
+
+protected:
+
+    virtual void update();
+    virtual void updateGradient();
+
+private:
+
+    int _selection;
+};
+

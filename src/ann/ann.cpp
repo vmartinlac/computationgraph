@@ -79,25 +79,59 @@ void ANN::build_and_train(AbstractDataset* set, int depth)
     {
         for(int i=0; i<n->getNumOutputs(); i++)
         {
-            n->setValue(i, distrib(engine));
+            n->setValue(i, distrib(engine)*0.01);
         }
     }
 
     //////
 
-    std::vector<double> input;
-    int cl;
-    set->getExample(10, input, cl);
+    const int N = getNumberOfWeights();
 
-    assert(input.size() == _breadth);
-    for(int i=0; i<_breadth; i++)
+    double error = 0.0;
+    std::vector<double> gradient(N, 0.0);
+
+    for(int s=0; s<set->getNumberOfExamples(); s++)
     {
-        _inputNode->setValue(i, input[i]);
+        std::cout << s << '/' << set->getNumberOfExamples() << std::endl;
+        std::vector<double> input;
+        int cl;
+
+        set->getExample(10, input, cl);
+        assert(input.size() == _breadth);
+
+        for(int i=0; i<_breadth; i++)
+        {
+            _inputNode->setValue(i, input[i]);
+        }
+
+        _graph->update();
+        _graph->updateGradient(_outputNode, cl);
+
+        error += _outputNode->getOutput(cl);
+
+        int offset = 0;
+        for(ComputationGraph::Node* n : _weights)
+        {
+            for(int i=0; i<n->getNumOutputs(); i++)
+            {
+                assert(offset < N);
+                gradient[offset] += n->getGradient(i);
+                offset++;
+            }
+        }
+        assert(offset == N);
     }
-    _graph->update();
+
+    std::cout << "= Sortie =" << std::endl;
     for(int i=0; i<_numClasses; i++)
     {
         std::cout << _outputNode->getOutput(i) << std::endl;
+    }
+
+    std::cout << "= Gradient =" << std::endl;
+    for(int i=0; i<_breadth; i++)
+    {
+        std::cout << _inputNode->getGradient(i) << std::endl;
     }
 }
 

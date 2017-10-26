@@ -1,4 +1,5 @@
 #include "cgnodes.h"
+#include <iostream>
 #include <cmath>
 
 // Constant node.
@@ -207,3 +208,24 @@ void SoftmaxNode::updateGradient()
     }
 }
 
+// select node.
+
+SelectNode::SelectNode(ComputationGraph* graph, int dim) : Node(graph, dim, 1), _selection(0) { }
+
+const char* SelectNode::name() { return "SelectNode"; }
+
+void SelectNode::update()
+{
+    setOutput(0, getInput(_selection));
+}
+
+void SelectNode::updateGradient()
+{
+    notifyGradient(_selection, 0, 1.0);
+}
+
+void SelectNode::select(int id)
+{
+    assert( 0 <= id && id < getNumInputs() );
+    _selection = id;
+}
