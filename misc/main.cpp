@@ -198,6 +198,86 @@ void ComputationGraph::Evaluation::update()
          }
          break;
 
+      case FUNCTION_IDENTITY:
+         for(int i=0; i<n.dimension; i++)
+         {
+            _values[ n.output_offset + i ] = _values[ _graph->_inputs[n.input_offset + i] ];
+         }
+         break;
+
+      case FUNCTION_POSITIVE_PART:
+         for(int i=0; i<n.dimension; i++)
+         {
+            const double val = _values[ _graph->_inputs[n.input_offset + i] ];
+            if(val >= 0.0)
+            {
+               _values[ n.output_offset + i ] = val;
+            }
+            else
+            {
+               _values[ n.output_offset + i ] = 0.0;
+            }
+         }
+         break;
+
+      /*
+      case FUNCTION_SCALAR_PRODUCT:
+         break;
+
+      case FUNCTION_SOFTMAX:
+         break;
+    */
+
+      default:
+         throw std::runtime_error("Unkown function.");
+      }
+   }
+}
+
+void ComputationGraph::Evaluation::updateGradient(int node, int output)
+{
+    std::vector<bool> immutable(_dimension, false);
+
+   _gradient.assign( _graph->_dimension, 0.0 );
+   _gradient[ _graph->_nodes[node].output_offset + output ] = 1.0;
+
+   for(std::vector<Node>::reverse_iterator n=_graph->_nodes.rbegin(); n!=_graph->_nodes.rend(); n++)
+   {
+      for(int i=0; i<n->num_outputs; i++)
+      {
+        immutable[ n->output_offset + i] = true;
+      }
+
+      for(int i=0; i<n->num_inputs; i++)
+      {
+        assert( immutable[ _graph->_inputs[n->input_offset + i]] == false );
+      }
+
+      switch(n.function)
+      {
+
+      case FUNCTION_CONSTANT:
+         break;
+
+      case FUNCTION_ARRAY_PRODUCT:
+         for(int i=0; i<n.dimension; i++)
+         {
+            _gradient[ _graph->_inputs[n.input_offset + 2*i] ] +=
+                _values[ _graph->_inputs[n.input_offset + 2*i + 1 ]] * _gradient[ n->output_offset + i ];
+            _gradient[ _graph->_inputs[n.input_offset + 2*i + 1] ] +=
+                _values[ _graph->_inputs[n.input_offset + 2*i ]] * _gradient[ n->output_offset + i ];
+         }
+         break;
+
+      case FUNCTION_ARRAY_SUM:
+         for(int i=0; i<n.dimension; i++)
+         {
+           _gradient[ _graph->_inputs[n.input_offset + 2*i + 0] ] += _gradient[ n->output_offset + i ]
+           _gradient[ _graph->_inputs[n.input_offset + 2*i + 1] ] += _gradient[ n->output_offset + i ]
+         }
+         break;
+
+      /*
       case FUNCTION_SOFTMAX:
          break;
 
@@ -225,21 +305,10 @@ void ComputationGraph::Evaluation::update()
 
       case FUNCTION_SCALAR_PRODUCT:
          break;
-
+        */
       default:
          throw std::runtime_error("Unkown function.");
       }
-   }
-}
-
-void ComputationGraph::Evaluation::updateGradient(int node, int output)
-{
-   _gradient.assign( _graph->_dimension, 0.0 );
-   _gradient[ _graph->_nodes[node].output_offset + output ] = 1.0;
-
-   for(std::vector<Node>::reverse_iterator it=_graph->_nodes.rbegin(); it!=_graph->_nodes.rend(); it++)
-   {
-      ;
    }
 }
 
