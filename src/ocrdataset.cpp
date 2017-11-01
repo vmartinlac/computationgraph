@@ -63,17 +63,18 @@ int OCRDataset::getNumberOfClasses()
     return 26;
 }
 
-void OCRDataset::getExample(int id, std::vector<double>& example, int& cl)
+void OCRDataset::getExample(int id, ComputationGraph::Evaluation* eval, int node, int& cl)
 {
     assert(0 <= id && id < _examples.size());
 
     Example& e = _examples[id];
 
-    example.resize(128);
-
     for(int i=0; i<128; i++)
     {
-        example[i] = (e.data[1+i] == '1') ? 1.0 : -1.0;
+        eval->setValue(
+            node,
+            i,
+            (e.data[1+i] == '1') ? 1.0 : -1.0);
     }
 
     cl = e.data[0] - 'a';

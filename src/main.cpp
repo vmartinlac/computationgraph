@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include "ocrdataset.h"
 #include "cg.h"
 #include "ann.h"
 
@@ -14,9 +15,15 @@ int main(int num_args, char** args)
 
 int exempleII()
 {
+    const char* path = "/home/vmartinl/Depotoire/computationgraph/dataset/letters.csv";
+    OCRDataset dataset;
+    dataset.load(path);
+
     ANN ann;
-    ann.build(5, 1, 3);
-    ann.getGraph().print(std::cout);
+    ann.build(128, 1, 26);
+    ann.train(&dataset);
+
+    //ann.getGraph().print(std::cout);
 }
 
 int exempleI()

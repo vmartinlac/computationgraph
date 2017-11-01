@@ -2,6 +2,7 @@
 
 #include <vector>
 #include "cg.h"
+#include "abstractdataset.h"
 
 class ANN
 {
@@ -9,11 +10,14 @@ public:
 
     void build(int N, int D, int C);
 
+    void train(AbstractDataset* dataset);
+
     ComputationGraph& getGraph();
 
 protected:
 
     int addLayer(int prev, bool last);
+    void setRandomWeights(ComputationGraph::Evaluation* eval);
 
 protected:
 

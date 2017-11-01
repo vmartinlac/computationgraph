@@ -1,3 +1,5 @@
+#include <random>
+#include <iostream>
 #include "ann.h"
 
 ComputationGraph& ANN::getGraph()
@@ -58,5 +60,49 @@ void ANN::build(int N, int D, int C)
     _back = addLayer(prev, true);
 
     _graph.check();
+}
+
+void ANN::setRandomWeights(ComputationGraph::Evaluation* eval)
+{
+    std::default_random_engine engine;
+    std::normal_distribution<double> distrib(0.0, 1.0/double(_N+1));
+
+    for(int i : _weights)
+    {
+        for(int j=0; j<=_N; j++)
+        {
+            eval->setValue( i, j, distrib(engine) );
+        }
+    }
+}
+
+void ANN::train(AbstractDataset* dataset)
+{
+    ComputationGraph::Evaluation* eval = new ComputationGraph::Evaluation(&_graph);
+
+    setRandomWeights(eval);
+
+    std::vector<double> gradient( (_N+1)*_weights.size(), 0.0 );
+    for(int i=0; i<dataset->getNumberOfExamples(); i++)
+    {
+        int cl;
+        dataset->getExample(i, eval, _front, cl);
+        eval->update();
+        eval->updateGradient(_back, cl);
+
+        int l = 0;
+        for(int j : _weights)
+        {
+            for(int k=0; k<=_N; k++)
+            {
+                gradient[l] = eval->getGradient( j, k );
+                l++;
+            }
+        }
+
+        std::cout << i+1 << '/' << dataset->getNumberOfExamples() << std::endl;
+    }
+
+    delete eval;
 }
 

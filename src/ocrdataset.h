@@ -11,7 +11,7 @@ public:
     virtual int getNumberOfExamples();
     virtual int getInputDimension();
     virtual int getNumberOfClasses();
-    virtual void getExample(int id, std::vector<double>& example, int& cl);
+    virtual void getExample(int id, ComputationGraph::Evaluation* eval, int node, int& cl);
 
 protected:
 
