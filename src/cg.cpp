@@ -1,4 +1,7 @@
 #include "cg.h"
+#include <algorithm>
+#include <map>
+#include <iostream>
 #include <cassert>
 #include <cmath>
 #include <stdexcept>
@@ -289,3 +292,80 @@ void ComputationGraph::Evaluation::updateGradient(int node, int output)
       }
    }
 }
+
+void ComputationGraph::clear()
+{
+    _dimension = 0;
+    _nodes.clear();
+    _inputs.clear();
+}
+
+void ComputationGraph::print(std::ostream& f)
+{
+    // map the functions to their names.
+
+    std::map<int,const char*> names;
+
+    names[FUNCTION_CONSTANT] = "Constant";
+    names[FUNCTION_SUM] = "Sum";
+    names[FUNCTION_ARRAY_SUM] = "ArraySum";
+    names[FUNCTION_ARRAY_PRODUCT] = "ArrayProduct";
+    names[FUNCTION_LOGSOFTMAX] = "LogSoftMax";
+    names[FUNCTION_POSITIVE_PART] = "PositivePart";
+
+    // define some variables.
+
+    const int num_nodes = _nodes.size();
+
+    std::vector<int> provider(_dimension, -1);
+    std::vector<int> adjacency(num_nodes*num_nodes, 0);
+
+    // find the node providing each output.
+
+    for(int i=0; i<num_nodes; i++)
+    {
+        Node& n = _nodes[i];
+        for(int j=0; j<n.num_outputs; j++)
+        {
+            provider[ n.output_offset + j ] = i;
+        }
+    }
+    assert( std::all_of( provider.begin(), provider.end(), [] (int a) { return a >= 0; } ) );
+
+    // compute the adjacency table.
+
+    for(int i=0; i<num_nodes; i++)
+    {
+        Node& n = _nodes[i];
+        for(int j=0; j<n.num_inputs; j++)
+        {
+            const int id_from = provider[ _inputs[ n.input_offset + j ] ];
+            const int id_to = i;
+            adjacency[id_from*num_nodes+id_to]++;
+        }
+    }
+
+    f << "digraph {" << std::endl;
+
+    for(int i=0; i<num_nodes; i++)
+    {
+        Node& n = _nodes[i];
+        f << "   n" <<  i << " [label=\"" << names[n.function] << "\"];" << std::endl;
+    }
+
+    for(int i=0; i<num_nodes; i++)
+    {
+        Node& n = _nodes[i];
+        for(int j=0; j<num_nodes; j++)
+        {
+            const int weight = adjacency[i*num_nodes+j];
+            if(weight > 0)
+            {
+                f << "   n" <<  i << " -> n" << j << " [label=\"" << weight << "\"];" << std::endl;
+            }
+        }
+    }
+
+    f << "}" << std::endl;
+}
+

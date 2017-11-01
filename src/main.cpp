@@ -2,16 +2,24 @@
 #include <vector>
 #include <cmath>
 #include "cg.h"
+#include "ann.h"
 
-class ANN
-{
-public:
-protected:
-
-    ComputationGraph _graph;
-};
+int exempleI();
+int exempleII();
 
 int main(int num_args, char** args)
+{
+    return exempleII();
+}
+
+int exempleII()
+{
+    ANN ann;
+    ann.build(5, 1, 3);
+    ann.getGraph().print(std::cout);
+}
+
+int exempleI()
 {
    ComputationGraph graph;
    int source = graph.addNode(ComputationGraph::FUNCTION_CONSTANT, 3);
@@ -32,6 +40,7 @@ int main(int num_args, char** args)
    eval.update();
    eval.updateGradient(end, 2);
 
+   /*
    std::cout << std::exp( eval.getValue(end, 0) ) << std::endl;
    std::cout << std::exp( eval.getValue(end, 1) ) << std::endl;
    std::cout << std::exp( eval.getValue(end, 2) ) << std::endl;
@@ -39,6 +48,10 @@ int main(int num_args, char** args)
    std::cout << eval.getGradient(source, 0) << std::endl;
    std::cout << eval.getGradient(source, 1) << std::endl;
    std::cout << eval.getGradient(source, 2) << std::endl;
+   */
+
+   graph.print(std::cout);
 
    return 0;
 }
+

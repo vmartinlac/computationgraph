@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ostream>
 #include <vector>
 
 class ComputationGraph
@@ -24,7 +25,11 @@ public:
 
    void connect(int node_from, int output, int node_to, int input);
 
+   void print(std::ostream& f);
+
    void check();
+
+   void clear();
 
 protected:
 

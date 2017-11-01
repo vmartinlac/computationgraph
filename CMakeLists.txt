@@ -1,11 +1,12 @@
 cmake_minimum_required(VERSION 2.4)
 
-project(cg CXX)
+project(dlp CXX)
 
-include_directories(${CMAKE_SOURCE_DIR}/src/ann)
-include_directories(${CMAKE_SOURCE_DIR}/src/cg)
-include_directories(${CMAKE_SOURCE_DIR}/src/ocr)
-message(${CMAKE_SOURCE_DIR}/ocr)
+set(CXX_STANDARD 17)
 
-add_subdirectory(src)
+add_executable(dlp
+    src/main.cpp
+    src/ann.cpp
+    src/cg.cpp
+    src/ocrdataset.cpp)
 
