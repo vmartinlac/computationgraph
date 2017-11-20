@@ -7,6 +7,5 @@ set(CXX_STANDARD 17)
 add_executable(dlp
     src/main.cpp
     src/ann.cpp
-    src/cg.cpp
-    src/ocrdataset.cpp)
+    src/cg.cpp)
 

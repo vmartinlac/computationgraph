@@ -31,13 +31,10 @@ int ComputationGraph::addNode(int function, int dimension)
       n.num_outputs = dimension;
       break;
    case FUNCTION_LOGSOFTMAX:
-      n.num_inputs = dimension;
-      n.num_outputs = dimension;
-      break;
    case FUNCTION_POSITIVE_PART:
+   case FUNCTION_IDENTITY:
       n.num_inputs = dimension;
       n.num_outputs = dimension;
-      break;
    default:
       throw std::runtime_error("Unexpected value for 'function'.");
    }
@@ -120,6 +117,15 @@ void ComputationGraph::Evaluation::update()
       case FUNCTION_CONSTANT:
          break;
 
+      case FUNCTION_IDENTITY:
+         {
+            for(int i=0; i<n->dimension; i++)
+            {
+                _values[ n->output_offset + i ] = _values[ _graph->_inputs[ n->input_offset + i ] ];
+            }
+         }
+         break;
+
       case FUNCTION_SUM:
          {
             double val = 0.0;
@@ -197,9 +203,11 @@ void ComputationGraph::Evaluation::update()
 
 void ComputationGraph::Evaluation::updateGradient(int node, int output)
 {
-    std::vector<bool> immutable(_graph->_dimension, false);
+   assert( _gradient.size() == _graph->_dimension );
 
-   _gradient.assign( _graph->_dimension, 0.0 );
+   std::vector<bool> immutable(_graph->_dimension, false);
+
+   std::fill( _gradient.begin(), _gradient.end(), 0.0 );
    _gradient[ _graph->_nodes[node].output_offset + output ] = 1.0;
 
    for(std::vector<Node>::reverse_iterator n=_graph->_nodes.rbegin(); n!=_graph->_nodes.rend(); n++)
@@ -218,6 +226,13 @@ void ComputationGraph::Evaluation::updateGradient(int node, int output)
       {
 
       case FUNCTION_CONSTANT:
+         break;
+
+      case FUNCTION_IDENTITY:
+         for(int i=0; i<n->dimension; i++)
+         {
+            _gradient[ _graph->_inputs[n->input_offset + i] ] += _gradient[ n->output_offset + i ];
+         }
          break;
 
       case FUNCTION_SUM:
@@ -312,6 +327,7 @@ void ComputationGraph::print(std::ostream& f)
     names[FUNCTION_ARRAY_PRODUCT] = "ArrayProduct";
     names[FUNCTION_LOGSOFTMAX] = "LogSoftMax";
     names[FUNCTION_POSITIVE_PART] = "PositivePart";
+    names[FUNCTION_IDENTITY] = "Identity";
 
     // define some variables.
 
