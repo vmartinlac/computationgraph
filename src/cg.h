@@ -2,6 +2,7 @@
 
 #include <ostream>
 #include <vector>
+#include <cassert>
 
 class ComputationGraph
 {
@@ -14,6 +15,7 @@ public:
       FUNCTION_CONSTANT,
       FUNCTION_SUM,
       FUNCTION_ARRAY_SUM,
+      FUNCTION_ARRAY_SUBSTRACTION,
       FUNCTION_ARRAY_PRODUCT,
       FUNCTION_LOGSOFTMAX,
       FUNCTION_IDENTITY,
@@ -32,6 +34,8 @@ public:
 
    void clear();
 
+   int getNumOutputs(int node);
+
 protected:
 
    struct Node
@@ -49,6 +53,12 @@ protected:
    std::vector<int> _inputs;
 };
 
+inline int ComputationGraph::getNumOutputs(int node)
+{
+    assert( 0 <= node && node < _nodes.size() );
+    return _nodes[node].num_outputs;
+}
+
 class ComputationGraph::Evaluation
 {
 public:
@@ -63,6 +73,8 @@ public:
 
    double getValue(int node, int output);
 
+   double& refValue(int node, int output);
+
    double getGradient(int node, int output);
 
 protected:
@@ -71,3 +83,4 @@ protected:
    std::vector<double> _gradient;
    ComputationGraph* _graph;
 };
+

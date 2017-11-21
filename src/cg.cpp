@@ -26,6 +26,7 @@ int ComputationGraph::addNode(int function, int dimension)
       n.num_outputs = 1;
       break;
    case FUNCTION_ARRAY_SUM:
+   case FUNCTION_ARRAY_SUBSTRACTION:
    case FUNCTION_ARRAY_PRODUCT:
       n.num_inputs = 2*dimension;
       n.num_outputs = dimension;
@@ -35,6 +36,7 @@ int ComputationGraph::addNode(int function, int dimension)
    case FUNCTION_IDENTITY:
       n.num_inputs = dimension;
       n.num_outputs = dimension;
+      break;
    default:
       throw std::runtime_error("Unexpected value for 'function'.");
    }
@@ -60,6 +62,7 @@ void ComputationGraph::connect(int node_from, int output, int node_to, int input
 
    assert( 0 <= output && output < nfrom.num_outputs );
    assert( 0 <= input && input < nto.num_inputs );
+   assert( _inputs[ nto.input_offset + input ] < 0 );
 
    _inputs[ nto.input_offset + input ] = nfrom.output_offset + output;
 }
@@ -92,6 +95,13 @@ void ComputationGraph::Evaluation::setValue(int node, int output, double value)
    ComputationGraph::Node& n = _graph->_nodes[node];
    assert( 0 <= output && output < n.num_outputs );
    _values[ n.output_offset + output ] = value;
+}
+
+double& ComputationGraph::Evaluation::refValue(int node, int output)
+{
+   ComputationGraph::Node& n = _graph->_nodes[node];
+   assert( 0 <= output && output < n.num_outputs );
+   return _values[ n.output_offset + output ];
 }
 
 double ComputationGraph::Evaluation::getValue(int node, int output)
@@ -150,6 +160,14 @@ void ComputationGraph::Evaluation::update()
          {
             _values[ n->output_offset + i ] =
                _values[ _graph->_inputs[n->input_offset + 2*i] ] + _values[ _graph->_inputs[n->input_offset + 2*i + 1 ]];
+         }
+         break;
+
+      case FUNCTION_ARRAY_SUBSTRACTION:
+         for(int i=0; i<n->dimension; i++)
+         {
+            _values[ n->output_offset + i ] =
+               _values[ _graph->_inputs[n->input_offset + 2*i + 1] ] - _values[ _graph->_inputs[n->input_offset + 2*i ]];
          }
          break;
 
@@ -255,8 +273,16 @@ void ComputationGraph::Evaluation::updateGradient(int node, int output)
       case FUNCTION_ARRAY_SUM:
          for(int i=0; i<n->dimension; i++)
          {
-           _gradient[ _graph->_inputs[n->input_offset + 2*i + 0] ] += _gradient[ n->output_offset + i ];
-           _gradient[ _graph->_inputs[n->input_offset + 2*i + 1] ] += _gradient[ n->output_offset + i ];
+             _gradient[ _graph->_inputs[n->input_offset + 2*i + 0] ] += _gradient[ n->output_offset + i ];
+             _gradient[ _graph->_inputs[n->input_offset + 2*i + 1] ] += _gradient[ n->output_offset + i ];
+         }
+         break;
+
+      case FUNCTION_ARRAY_SUBSTRACTION:
+         for(int i=0; i<n->dimension; i++)
+         {
+             _gradient[ _graph->_inputs[n->input_offset + 2*i + 0] ] -= _gradient[ n->output_offset + i ];
+             _gradient[ _graph->_inputs[n->input_offset + 2*i + 1] ] += _gradient[ n->output_offset + i ];
          }
          break;
 
@@ -324,6 +350,7 @@ void ComputationGraph::print(std::ostream& f)
     names[FUNCTION_CONSTANT] = "Constant";
     names[FUNCTION_SUM] = "Sum";
     names[FUNCTION_ARRAY_SUM] = "ArraySum";
+    names[FUNCTION_ARRAY_SUBSTRACTION] = "ArraySubstraction";
     names[FUNCTION_ARRAY_PRODUCT] = "ArrayProduct";
     names[FUNCTION_LOGSOFTMAX] = "LogSoftMax";
     names[FUNCTION_POSITIVE_PART] = "PositivePart";
